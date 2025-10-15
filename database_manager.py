@@ -1,30 +1,3 @@
-# File: database_manager.py
-
-import sqlite3
-import os
-
-# Use the database name you chose
-DATABASE_NAME = "quiz_data.db"
-
-def connect_db():
-    """Establishes a connection to the SQLite database and creates it if it doesn't exist."""
-    conn = sqlite3.connect(DATABASE_NAME)
-    return conn
-
-def create_table_if_not_exists(cursor, table_name):
-    """A helper function to create a single table."""
-    cursor.execute(f"""
-        CREATE TABLE IF NOT EXISTS {table_name} (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            question_text TEXT NOT NULL,
-            option_a TEXT NOT NULL,
-            option_b TEXT NOT NULL,
-            option_c TEXT NOT NULL,
-            option_d TEXT NOT NULL,
-            correct_answer TEXT NOT NULL CHECK(correct_answer IN ('A', 'B', 'C', 'D'))
-        );
-    """)
-
 def populate_initial_data():
     """Creates all tables and populates them with your questions ONLY if they are empty."""
     conn = connect_db()
@@ -63,7 +36,6 @@ def populate_initial_data():
             ("Which of the following statements is true?", "PERMA elements are positively related to good health...", "Well-being is a single, unique concept that is related to happiness.", "Employees' level of flourishing is related to organizational outcomes such as productivity and financial performance.", "Positive emotions 'happen to people'; they cannot be pursued proactively.", "C"),
             ("Flourishing represents the extent to which our lives contain PERMA—", "positive emotions, enrichments, realism, meaning, and action.", "positive emotions, engagement, relationships, meaning, and achievement.", "position, equanimity, respect, money, and acceptance.", "peace, emotions, reflection, management, and action.", "B"),
             ("Which of the following is an individual function of a group?", "coordinate interdepartmental efforts", "satisfy the person's need for affiliation", "implement complex decisions", "socialize newcomers", "B"),
-            # CORRECTED QUESTION: Changed answer from 'E' to a valid option. "Storming" is the testing stage.
             ("Syndey takes over as CEO of Sandstorm Jeans... The remaining employees resist her ideas. This represent the ______ stage; it is a time of testing.", "norming", "storming", "forming", "performing", "B"),
             ("Rich is part of a newly formed work group... He still feels like he cannot trust them... Which of the following stages is Rich’s group currently in?", "norming", "forming", "storming", "performing", "B"),
             ("As a manager, Haley has established a new work group... Two cliques have formed... Which of the following stages of group development process is Haley observing?", "storming", "forming", "performing", "norming", "A"),
@@ -71,80 +43,30 @@ def populate_initial_data():
             ("During a group meeting, Nadia comments, ______. She is performing a maintenance role.", "\"What is the real issue here? We don't seem to be going anywhere.\"", "\"Let's accept and praise the various points of view.\"", "\"We can do this. We've met difficult goals before.\"", "\"Last week we decided to table this agenda item...\"", "B")
         ]
         cursor.executemany(f"INSERT INTO {bmgt_table} (question_text, option_a, option_b, option_c, option_d, correct_answer) VALUES (?, ?, ?, ?, ?, ?)", bmgt_questions)
+    
+    # --- Course 3: ECON-3610-003 ---
+    econ_table = "ECON_3610_003"
+    create_table_if_not_exists(cursor, econ_table)
+    cursor.execute(f"SELECT COUNT(id) FROM {econ_table}")
+    if cursor.fetchone()[0] == 0:
+        print(f"Table '{econ_table}' is empty. Populating with initial data...")
+        econ_questions = [
+            ("Which of the following best defines a population in statistics?", "A small subset of individuals selected for study", "All possible individuals or observations of interest", "The number of people in a sample", "The method of selecting participants", "B"),
+            ("A sample is best described as:", "The entire group a researcher wants to study", "A numerical summary of a population", "A portion of the population used to make inferences", "A qualitative variable", "C"),
+            ("Which of the following is a qualitative (categorical) variable?", "Height in inches", "Number of siblings", "Type of car (SUV, sedan, truck)", "Age in years", "C"),
+            ("The mean, median, and mode are all:", "Measures of spread", "Measures of central tendency", "Probability distributions", "Types of samples", "B"),
+            ("Which measure of spread is most affected by extreme values (outliers)?", "Range", "Interquartile range", "Standard deviation", "Median", "A"),
+            ("If two events A and B are independent, this means:", "They cannot happen at the same time", "P(A and B) = P(A) + P(B)", "P(A and B) = P(A) × P(B)", "P(A | B) = 0", "C"),
+            ("Which probability distribution is most appropriate for modeling the number of customers arriving at a store per hour?", "Normal distribution", "Binomial distribution", "Poisson distribution", "Uniform distribution", "C"),
+            ("In a normal distribution, approximately what percent of data falls within one standard deviation of the mean?", "34%", "50%", "68%", "95%", "C"),
+            ("When constructing a confidence interval, the “margin of error” represents:", "The sample size", "The average of the data", "The range of the population", "How far the estimate may be from the true parameter", "D"),
+            ("In single-sample hypothesis testing, the null hypothesis (H₀) typically states that:", "There is a significant difference", "The sample mean equals the claimed population mean", "The sample size is too small", "The test statistic is greater than 2", "B")
+        ]
+        cursor.executemany(f"INSERT INTO {econ_table} (question_text, option_a, option_b, option_c, option_d, correct_answer) VALUES (?, ?, ?, ?, ?, ?)", econ_questions)
 
-    # --- Add your other two courses here when you have the data ---
-    # create_table_if_not_exists(cursor, "Course_C_Placeholder")
+    # --- Add your last course here when you have the data ---
     # create_table_if_not_exists(cursor, "Course_D_Placeholder")
 
     conn.commit()
     conn.close()
     print("Database initialization check complete.")
-
-### --- Functions for the Admin and Student Interfaces --- ###
-
-def get_course_tables():
-    """Retrieves a list of all course table names from the database."""
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
-    tables = [row[0] for row in cursor.fetchall()]
-    conn.close()
-    return tables
-
-def add_question(table_name, question_data):
-    """Adds a new question to a specific course table."""
-    conn = connect_db()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(f"""
-            INSERT INTO {table_name} (question_text, option_a, option_b, option_c, option_d, correct_answer)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            question_data['question_text'], question_data['option_a'], question_data['option_b'],
-            question_data['option_c'], question_data['option_d'], question_data['correct_answer']
-        ))
-        conn.commit()
-    finally:
-        conn.close()
-
-def get_questions(table_name):
-    """Fetches all questions from a specific course table."""
-    conn = connect_db()
-    # This makes the cursor return dictionary-like rows, which can be useful
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute(f"SELECT * FROM {table_name}")
-    questions = cursor.fetchall()
-    conn.close()
-    return questions
-    
-def update_question(table_name, question_id, new_data):
-    """Updates an existing question in the database."""
-    conn = connect_db()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(f"""
-            UPDATE {table_name} SET
-            question_text = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, correct_answer = ?
-            WHERE id = ?
-        """, (
-            new_data['question_text'], new_data['option_a'], new_data['option_b'],
-            new_data['option_c'], new_data['option_d'], new_data['correct_answer'], question_id
-        ))
-        conn.commit()
-    finally:
-        conn.close()
-
-def delete_question(table_name, question_id):
-    """Deletes a question from the database."""
-    conn = connect_db()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(f"DELETE FROM {table_name} WHERE id = ?", (question_id,))
-        conn.commit()
-    finally:
-        conn.close()
-
-# This part runs the setup function when you execute the script directly
-if __name__ == '__main__':
-    populate_initial_data()
