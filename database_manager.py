@@ -1,3 +1,5 @@
+# File: database_manager.py
+
 import sqlite3
 import os
 
@@ -91,9 +93,25 @@ def populate_initial_data():
             ("In single-sample hypothesis testing, the null hypothesis (H₀) typically states that:", "There is a significant difference", "The sample mean equals the claimed population mean", "The sample size is too small", "The test statistic is greater than 2", "B")
         ]
         cursor.executemany(f"INSERT INTO {econ_table} (question_text, option_a, option_b, option_c, option_d, correct_answer) VALUES (?, ?, ?, ?, ?, ?)", econ_questions)
-
-    # --- Add your last course here when you have the data ---
-    # create_table_if_not_exists(cursor, "Course_D_Placeholder")
+        
+    # --- Course 4: DS_3860_001 ---
+    ds_table = create_table_if_not_exists(cursor, "DS_3860_001")
+    cursor.execute(f"SELECT COUNT(id) FROM {ds_table}")
+    if cursor.fetchone()[0] == 0:
+        print(f"Table '{ds_table}' is empty. Populating with initial data...")
+        ds_questions = [
+            ("In a relational database, a primary key is:", "A field that allows duplicate values", "A field that uniquely identifies each record in a table", "A foreign key in another table", "An attribute that must be null", "B"),
+            ("Which of the following best describes a foreign key?", "A key that can only be used in one table", "A key used to enforce referential integrity between tables", "A randomly generated identifier", "A key that prevents duplicate entries", "B"),
+            ("Which relational algebra operation returns only the shared tuples that appear in both relations?", "Union", "Intersection", "Difference", "Product", "B"),
+            ("The Cartesian Product in relational algebra:", "Combines tables based on matching values", "Returns only common rows", "Pairs every row of one table with every row of another", "Eliminates duplicate rows", "C"),
+            ("In an ER diagram, a diamond symbol typically represents:", "An entity", "An attribute", "A relationship", "A primary key", "C"),
+            ("Which of the following is a weak entity?", "An entity that has its own primary key", "An entity that depends on another entity for identification", "An entity with no attributes", "An entity that cannot participate in relationships", "B"),
+            ("The relational algebra operation σ (sigma) is used for:", "Projection (choosing columns)", "Selection (choosing rows based on a condition)", "Joining two tables", "Sorting rows", "B"),
+            ("In an ER model, a multivalued attribute is shown as:", "An oval", "A double oval", "A rectangle", "A dashed line", "B"),
+            ("Which of the following is TRUE about 1-to-many (1:M) relationships?", "Each record in Table A matches exactly one record in Table B", "Each record in Table A may match many in Table B", "Each record in Table B may match many in Table A", "Records cannot be related", "B"),
+            ("Which relational algebra operation is typically used to combine related data from two tables using a matching attribute?", "Join", "Union", "Difference", "Rename", "A")
+        ]
+        cursor.executemany(f"INSERT INTO {ds_table} (question_text, option_a, option_b, option_c, option_d, correct_answer) VALUES (?, ?, ?, ?, ?, ?)", ds_questions)
 
     conn.commit()
     conn.close()
