@@ -116,3 +116,75 @@ def populate_initial_data():
     conn.commit()
     conn.close()
     print("Database initialization check complete.")
+
+### --- Functions for the Admin and Student Interfaces --- ###
+
+def get_course_tables():
+    """Retrieves a list of all course table names from the database."""
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
+    tables = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return tables
+
+def add_question(table_name, question_data):
+    """Adds a new question to a specific course table."""
+    conn = connect_db()
+    cursor = conn.cursor()
+    safe_table_name = "".join(c for c in table_name if c.isalnum() or c == '_')
+    try:
+        cursor.execute(f"""
+            INSERT INTO {safe_table_name} (question_text, option_a, option_b, option_c, option_d, correct_answer)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            question_data['question_text'], question_data['option_a'], question_data['option_b'],
+            question_data['option_c'], question_data['option_d'], question_data['correct_answer']
+        ))
+        conn.commit()
+    finally:
+        conn.close()
+
+def get_questions(table_name):
+    """Fetches all questions from a specific course table."""
+    conn = connect_db()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    safe_table_name = "".join(c for c in table_name if c.isalnum() or c == '_')
+    cursor.execute(f"SELECT * FROM {safe_table_name}")
+    questions = cursor.fetchall()
+    conn.close()
+    return questions
+    
+def update_question(table_name, question_id, new_data):
+    """Updates an existing question in the database."""
+    conn = connect_db()
+    cursor = conn.cursor()
+    safe_table_name = "".join(c for c in table_name if c.isalnum() or c == '_')
+    try:
+        cursor.execute(f"""
+            UPDATE {safe_table_name} SET
+            question_text = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, correct_answer = ?
+            WHERE id = ?
+        """, (
+            new_data['question_text'], new_data['option_a'], new_data['option_b'],
+            new_data['option_c'], new_data['option_d'], new_data['correct_answer'], question_id
+        ))
+        conn.commit()
+    finally:
+        conn.close()
+
+def delete_question(table_name, question_id):
+    """Deletes a question from the database."""
+    conn = connect_db()
+    cursor = conn.cursor()
+    safe_table_name = "".join(c for c in table_name if c.isalnum() or c == '_')
+    try:
+        cursor.execute(f"DELETE FROM {safe_table_name} WHERE id = ?", (question_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+# This part runs the setup function when you execute the script directly
+if __name__ == '__main__':
+    populate_initial_data()
